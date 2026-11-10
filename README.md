@@ -12,15 +12,9 @@ Material de la charla de **Roberto Gutiérrez Brown** en el CINCIT 2026 (Univers
 
 ## Arquitectura
 
-Diagrama interactivo: [`docs/arquitectura_encuesta.html`](docs/arquitectura_encuesta.html) (se abre en el navegador; hecho con [Archify](https://github.com/tt-a1i/archify), su fuente editable es `docs/arquitectura_encuesta.archify.json`).
+![Arquitectura de la encuesta en vivo](docs/arquitectura_encuesta.png)
 
-```
-Alumnos ──QR──▶ Formulario ──POST──▶ Worker «encuesta» ──SQL──▶ D1 (SQLite)
-                    │                    │   ▲   ▲
-                    └─ token anti-bot ─▶ Turnstile ◀┘   │
-Ponente ──proyecta──▶ Panel ──datos cada 8 s──▶ Worker   │
-Ponente ──«procesa»──▶ Claude ──ejecuta──▶ Herramientas ─┘ (API con clave)
-```
+Versión interactiva (zoom, tema claro u oscuro, exportar): [`docs/arquitectura_encuesta.html`](docs/arquitectura_encuesta.html). Descárgala y ábrela en el navegador. Está hecha con [Archify](https://github.com/tt-a1i/archify) y su fuente editable es `docs/arquitectura_encuesta.archify.json`.
 
 - **Formulario y panel**: páginas estáticas (`encuesta/public`) servidas por el mismo Worker.
 - **Worker** (`encuesta/src/worker.js`): valida las respuestas, aplica la protección y calcula los datos.
