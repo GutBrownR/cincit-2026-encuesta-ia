@@ -9,7 +9,7 @@
 | Clave y atajos | `encuesta/ACCESOS.txt` (local, no se sube a GitHub) |
 | Código de la página | carpeta `../encuesta` (Cloudflare: un Worker + base de datos D1; para publicar de nuevo: `npx.cmd wrangler deploy`) |
 
-> Ahora corre en **Cloudflare** (cuenta `zgutbrown@gmail.com`). Ya no depende del almacenamiento de Vercel, que tenía un límite de operaciones al mes. Cloudflare permite 100 mil escrituras y 5 millones de lecturas **al día** gratis, así que 100 personas y un panel abierto no se acercan al tope.
+> Ahora corre en **Cloudflare**. Ya no depende del almacenamiento de Vercel, que tenía un límite de operaciones al mes. Cloudflare permite 100 mil escrituras y 5 millones de lecturas **al día** gratis, así que 100 personas y un panel abierto no se acercan al tope.
 > La copia vieja en Vercel (`cincit-encuesta-ia.vercel.app`) sigue en pie solo como respaldo; su clave se compartió en un chat, así que no la uses.
 
 ## Cómo funciona
