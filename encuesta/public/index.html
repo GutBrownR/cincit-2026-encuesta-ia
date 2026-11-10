@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cuéntanos de ti · CINCIT 2026</title>
+<meta name="robots" content="noindex">
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+<style>
+:root{--bg:#071A3E;--card:#0F2A5C;--text:#fff;--muted:#A9B8D6;--green:#1FD18B;--cyan:#17B5E0;--orange:#FF7F00}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,Arial,sans-serif;font-size:18px;line-height:1.4}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px}
+header img{height:38px;width:auto}
+main{max-width:640px;margin:0 auto;padding:0 18px 60px}
+h1{font-size:30px;margin:8px 0 4px}
+.sub{color:var(--muted);margin:0 0 18px}
+.bar{height:6px;background:var(--card);border-radius:3px;overflow:hidden;margin-bottom:18px}
+.bar i{display:block;height:100%;width:0;background:var(--green);transition:width .25s}
+.q{background:var(--card);border-radius:14px;padding:16px 18px;margin-bottom:14px}
+.q h2{font-size:18px;margin:0 0 12px;font-weight:600}
+select{width:100%;padding:14px;font-size:18px;border-radius:10px;border:2px solid #22407f;background:#0a2150;color:var(--text)}
+.ops{display:grid;gap:8px}
+.op,.chip{padding:13px 14px;border:2px solid #22407f;border-radius:10px;background:#0a2150;color:var(--text);font-size:17px;text-align:left;cursor:pointer;font-family:inherit}
+.op.on,.chip.on{border-color:var(--green);background:#0d3a4d}
+.chips{display:flex;flex-wrap:wrap;gap:8px}.chip{border-radius:999px;padding:10px 16px}
+.esc{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.esc button{padding:14px 0;font-size:20px;font-weight:700;border:2px solid #22407f;border-radius:10px;background:#0a2150;color:var(--text);cursor:pointer}
+.esc button.on{border-color:var(--green);background:var(--green);color:var(--bg)}
+.ext{display:flex;justify-content:space-between;color:var(--muted);font-size:14px;margin-top:6px}
+.enviar{width:100%;padding:16px;font-size:20px;font-weight:700;border:0;border-radius:12px;background:var(--green);color:var(--bg);cursor:pointer;margin-top:6px}
+.enviar:disabled{opacity:.4;cursor:not-allowed}
+.nota{color:var(--muted);font-size:14px;text-align:center;margin-top:14px}
+.err{color:var(--orange);text-align:center;margin-top:10px;min-height:1.4em}
+.ok{text-align:center;padding:40px 10px}.ok .gr{font-size:56px;font-weight:800;color:var(--green)}
+.oculto{position:absolute;left:-9999px;opacity:0}
+#cfbox{display:flex;justify-content:center;margin:6px 0}#cfbox:empty{margin:0}
+.aviso{color:var(--orange);font-weight:600;font-size:16px;margin-top:10px}.aviso:empty{display:none}
+</style>
+</head>
+<body>
+<header>
+  <img src="/img/unajma.png" alt="UNAJMA" onerror="this.style.display='none'">
+  <img src="/img/cincit.png" alt="CINCIT 2026" onerror="this.style.display='none'">
+</header>
+<main id="app"><p class="sub">Cargando…</p></main>
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const app = $("#app");
+let preguntas = [], resp = {}, reglas = {}, sels = {}, avisos = {};
+let tk = "", sitekey = "", cfTok = "", cfT = 0, cfId = null; // entrada de un solo uso y prueba de Turnstile
+const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function guardarOk() { try { localStorage.setItem("cincit_ok", "1"); } catch (e) {} }
+function yaRespondio() { try { return localStorage.getItem("cincit_ok") === "1"; } catch (e) { return false; } }
+function nuevoId() {
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return "xxxxxxxx-xxxx-4xxx-8xxx-xxxxxxxxxxxx".replace(/[x]/g, () => ((Math.random() * 16) | 0).toString(16));
+}
+
+async function iniciar() {
+  if (yaRespondio()) return gracias(true);
+  try {
+    const cfg = await (await fetch("/api/config")).json();
+    preguntas = cfg.preguntas; reglas = cfg.reglas || {}; tk = cfg.tk || ""; sitekey = cfg.ts || "";
+  } catch (e) { app.innerHTML = '<p class="err">No se pudo cargar el formulario. Revisa tu conexión y recarga.</p>'; return; }
+  dibujar();
+  iniciarVerificacion();
+}
+
+// Turnstile: normalmente es invisible; solo muestra una casilla si Cloudflare duda de que sea una persona.
+function iniciarVerificacion() {
+  if (!sitekey) return;
+  const poner = () => {
+    if (!window.turnstile) return setTimeout(poner, 500); // el script carga aparte
+    try {
+      cfId = turnstile.render("#cfbox", { sitekey, appearance: location.search.includes("cfdebug") ? "always" : "interaction-only", language: "es",
+        callback: (t) => { cfTok = t; cfT = Date.now(); },
+        "expired-callback": () => { cfTok = ""; }, "error-callback": (c) => { cfTok = ""; window.__cfError = String(c); } });
+    } catch (e) {}
+  };
+  poner();
+}
+async function obtenerCf() {
+  if (!sitekey || !window.turnstile) return "";
+  if (cfTok && Date.now() - cfT < 240000) return cfTok;
+  try { turnstile.reset(cfId); } catch (e) {}
+  cfTok = "";
+  for (let i = 0; i < 28 && !cfTok; i++) await dormir(250);
+  return cfTok;
+}
+
+function dibujar() {
+  app.innerHTML = `<h1>Cuéntanos de ti</h1><p class="sub">${preguntas.length} preguntas · 90 segundos · 100% anónimo (no pedimos nombre, correo ni DNI)</p>
+  <div class="bar"><i id="prog"></i></div><form id="f" autocomplete="off"></form>`;
+  const f = $("#f");
+  preguntas.forEach((p) => {
+    const q = document.createElement("div"); q.className = "q";
+    const h = document.createElement("h2"); h.textContent = p.t; q.appendChild(h);
+    if (p.tipo === "select") {
+      const s = document.createElement("select");
+      s.innerHTML = '<option value="">Elige una opción</option>' + p.op.map((o) => `<option>${o}</option>`).join("");
+      sels[p.k] = s;
+      s.onchange = () => { resp[p.k] = s.value || undefined; ajustar(p.k); estado(); };
+      q.appendChild(s);
+    } else if (p.tipo === "radio") {
+      const w = document.createElement("div"); w.className = "ops";
+      p.op.forEach((o) => { const b = document.createElement("button"); b.type = "button"; b.className = "op"; b.textContent = o;
+        b.onclick = () => { resp[p.k] = o; w.querySelectorAll(".op").forEach((x) => x.classList.toggle("on", x === b)); estado(); };
+        w.appendChild(b); });
+      q.appendChild(w);
+    } else if (p.tipo === "check") {
+      const w = document.createElement("div"); w.className = "chips"; resp[p.k] = [];
+      p.op.forEach((o) => { const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.textContent = o;
+        b.onclick = () => {
+          let s = resp[p.k];
+          if (o === "Ninguna") s = s.includes(o) ? [] : ["Ninguna"];
+          else { s = s.filter((x) => x !== "Ninguna"); s = s.includes(o) ? s.filter((x) => x !== o) : [...s, o]; }
+          resp[p.k] = s; w.querySelectorAll(".chip").forEach((x) => x.classList.toggle("on", s.includes(x.textContent))); estado();
+        };
+        w.appendChild(b); });
+      q.appendChild(w);
+    } else {
+      const w = document.createElement("div"); w.className = "esc";
+      for (let n = 1; n <= 5; n++) { const b = document.createElement("button"); b.type = "button"; b.textContent = n;
+        b.onclick = () => { resp[p.k] = n; w.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); estado(); };
+        w.appendChild(b); }
+      q.appendChild(w);
+      const e = document.createElement("div"); e.className = "ext"; e.innerHTML = `<span>1 = ${p.a}</span><span>5 = ${p.b}</span>`; q.appendChild(e);
+    }
+    const av = document.createElement("div"); av.className = "aviso"; av.setAttribute("role", "alert"); q.appendChild(av); avisos[p.k] = av;
+    f.appendChild(q);
+  });
+  f.insertAdjacentHTML("beforeend", '<input class="oculto" name="web" tabindex="-1" aria-hidden="true">' +
+    '<div id="cfbox"></div><button class="enviar" id="env" type="submit" disabled>Enviar</button><div class="err" id="err" role="alert"></div>' +
+    '<p class="nota">Tus respuestas se usan solo en esta charla y se muestran de forma agrupada.</p>');
+  f.onsubmit = enviar;
+  estado();
+}
+
+function completa(p) { const v = resp[p.k]; return p.tipo === "check" ? v && v.length > 0 : v !== undefined && v !== ""; }
+
+// Ayuda: si dice que es docente, el ciclo pasa solo a "No aplica"; si deja de serlo, se limpia.
+function ajustar(k) {
+  if (k !== "carrera" || !reglas.docente || !sels.ciclo) return;
+  if (resp.carrera === reglas.docente) { sels.ciclo.value = reglas.noAplica; resp.ciclo = reglas.noAplica; }
+  else if (resp.ciclo === reglas.noAplica) { sels.ciclo.value = ""; resp.ciclo = undefined; }
+}
+
+// Avisa antes de enviar si las respuestas se contradicen (el servidor las revisa igual).
+// Devuelve { k: pregunta donde se muestra el aviso, m: mensaje } o null.
+function incoherencia() {
+  const r = resp, R = reglas; if (!R.docente) return null;
+  if (r.carrera && r.ciclo) {
+    const doc = r.carrera === R.docente;
+    if (doc && r.ciclo !== R.noAplica) return { k: "ciclo", m: "Si eres docente, en «ciclo» elige «No aplica (soy docente)»." };
+    if (!doc && r.ciclo === R.noAplica) return { k: "ciclo", m: "«No aplica» es solo para docentes. Elige tu ciclo o «Ya egresé»." };
+    if (R.maestrias.includes(r.carrera) && /^\d+$/.test(r.ciclo) && +r.ciclo > R.maxCicloMaestria) return { k: "ciclo", m: `Las maestrías tienen pocos ciclos (hasta ${R.maxCicloMaestria}). Revisa tu ciclo.` };
+  }
+  const h = r.herramientas || [], ning = h.includes("Ninguna");
+  if (r.frecuencia && h.length) {
+    if (r.frecuencia === "Nunca" && !ning) return { k: "herramientas", m: "Dijiste que nunca usas IA pero marcaste herramientas. Marca «Ninguna» o cambia la frecuencia." };
+    if (ning && r.frecuencia !== "Nunca") return { k: "herramientas", m: "Marcaste «Ninguna» pero dijiste que usas IA. Revisa la frecuencia o las herramientas." };
+  }
+  return null;
+}
+
+function estado() {
+  const hechas = preguntas.filter(completa).length;
+  const mal = incoherencia();
+  $("#prog").style.width = (100 * hechas / preguntas.length) + "%";
+  document.querySelectorAll(".aviso").forEach((x) => (x.textContent = ""));
+  if (mal && avisos[mal.k]) avisos[mal.k].textContent = "⚠ " + mal.m;
+  $("#err").textContent = mal ? "Revisa el aviso en naranja: hay respuestas que no cuadran." : "";
+  $("#env").disabled = hechas < preguntas.length || !!mal;
+}
+
+async function enviar(ev) {
+  ev.preventDefault();
+  const btn = $("#env"); btn.disabled = true; btn.textContent = "Enviando…"; $("#err").textContent = "";
+  const id = nuevoId(); // el mismo id en todos los reintentos: si un intento llego, el servidor lo reconoce y no se duplica
+  try {
+    const cf = await obtenerCf();
+    for (let intento = 0; ; intento++) {
+      const cuerpo = Object.assign({}, resp, { id, web: $("[name=web]").value, tk, cf });
+      const r = await fetch("/api/respuesta", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cuerpo) });
+      if (r.ok || r.status === 409) { guardarOk(); return gracias(r.status === 409); }
+      const j = await r.json().catch(() => ({}));
+      if (r.status === 425 && intento < 4) { btn.textContent = "Un momento…"; await dormir(((j.espera || 5) + 0.5) * 1000); continue; } // llego muy rapido: espera y reintenta solo
+      if (j.codigo === "token" && intento < 3) { tk = ((await (await fetch("/api/token")).json()).tk) || tk; btn.textContent = "Un momento…"; continue; } // entrada vencida o usada: pide otra
+      throw new Error(r.status === 400 ? (j.error || "400") : String(r.status));
+    }
+  } catch (e) {
+    $("#err").textContent = /^Respuesta inválida: .*[«.]/.test(e.message) ? e.message.replace("Respuesta inválida: ", "") : "No pudimos enviar tus respuestas. Revisa tu conexión e intenta de nuevo.";
+    btn.disabled = false; btn.textContent = "Enviar";
+  }
+}
+
+async function gracias(repetido) {
+  app.innerHTML = `<div class="ok"><div class="gr">¡Gracias!</div>
+    <p>${repetido ? "Ya registramos tus respuestas." : "Recibimos tus respuestas."}</p>
+    <p class="sub">Mira la pantalla: más adelante verás qué dijo esta sala.</p><p class="sub" id="cnt"></p></div>`;
+  try { const n = (await (await fetch("/api/datos?conteo=1")).json()).n; $("#cnt").textContent = `Ya respondieron ${n} personas.`; } catch (e) {}
+}
+iniciar();
+</script>
+</body>
+</html>

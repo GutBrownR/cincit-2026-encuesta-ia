@@ -1,0 +1,22 @@
+# Secretos y accesos (NUNCA se suben)
+.dev.vars
+.env
+.env.*
+ACCESOS.txt
+*.url
+
+# Sesiones y caché de Cloudflare / Wrangler
+.cfconfig/
+.wrangler/
+
+# Dependencias
+node_modules/
+
+# Respuestas reales de los asistentes (son datos de personas)
+resultados/
+*.respuestas.csv
+
+# Temporales de Office y del sistema
+~$*
+Thumbs.db
+.DS_Store

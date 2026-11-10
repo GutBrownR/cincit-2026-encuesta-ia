@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Panel en vivo · CINCIT 2026</title>
+<style>
+:root{--bg:#071A3E;--card:#0F2A5C;--text:#fff;--muted:#A9B8D6;--green:#1FD18B;--cyan:#17B5E0;--orange:#FF7F00}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,Arial,sans-serif}
+/* ---- clave ---- */
+#clave{display:none;max-width:420px;margin:12vh auto;text-align:center;padding:0 20px}
+#clave h1{font-size:30px}
+#clave input{width:100%;padding:14px;font-size:18px;border-radius:10px;border:2px solid #22407f;background:#0a2150;color:var(--text);margin:14px 0}
+.btn{background:var(--card);color:var(--text);border:2px solid #22407f;border-radius:10px;padding:8px 14px;font-size:15px;cursor:pointer;text-decoration:none;font-family:inherit}
+.sub{color:var(--muted)}
+/* ---- presentación ---- */
+#panel{display:none;position:fixed;inset:0}
+.sl{position:absolute;inset:0;padding:clamp(18px,4.5vh,64px) clamp(20px,5vw,110px) clamp(70px,11vh,120px);display:flex;flex-direction:column;
+  opacity:0;visibility:hidden;transform:translateX(24px);transition:opacity .35s,transform .35s,visibility .35s}
+.sl.on{opacity:1;visibility:visible;transform:none}
+.sl.prev{transform:translateX(-24px)}
+.kick{color:var(--green);font-size:clamp(14px,1.5vw,28px);font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin:0 0 .4em}
+.sl h2{font-size:clamp(26px,min(4.4vw,7.6vh),84px);line-height:1.1;margin:0 0 clamp(10px,2.5vh,36px);font-weight:700}
+.nota{color:var(--muted);font-size:clamp(14px,1.4vw,26px);margin:0 0 clamp(8px,1.8vh,24px)}
+/* datos clave */
+.kpis{flex:1;display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(12px,2.2vw,40px);min-height:0}
+.kpi{background:var(--card);border-radius:clamp(14px,1.6vw,30px);padding:0 clamp(18px,2.4vw,50px);display:flex;flex-direction:column;justify-content:center}
+.kpi .v{font-size:clamp(54px,9.5vw,190px);font-weight:700;color:var(--green);line-height:1}
+.kpi .l{color:var(--muted);font-size:clamp(16px,min(2vw,3.6vh),40px);margin-top:.25em}
+.kpi .s{color:var(--muted);font-size:clamp(13px,min(1.4vw,2.5vh),26px);margin-top:.35em;opacity:.9}
+/* insights */
+.ins-grid{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(12px,1.8vw,34px);min-height:0}
+.ins{background:var(--card);border-radius:clamp(14px,1.6vw,30px);padding:clamp(12px,min(1.8vw,2.6vh),38px);overflow-y:auto;min-height:0}
+.ins .n{width:1.9em;height:1.9em;border-radius:50%;background:var(--green);color:var(--bg);font-weight:700;display:flex;align-items:center;justify-content:center;font-size:clamp(13px,min(1.5vw,2.7vh),28px)}
+.ins h3{font-size:clamp(16px,min(2vw,3.4vh),40px);line-height:1.15;margin:.4em 0 .3em;color:var(--green)}
+.ins p{font-size:clamp(12px,min(1.3vw,2.15vh),25px);line-height:1.3;margin:.35em 0}
+.ins .ctx{color:var(--muted);font-size:clamp(10px,min(.95vw,1.6vh),18px)}
+/* barras */
+.bars{flex:1;display:flex;flex-direction:column;justify-content:space-evenly;min-height:0}
+.row{display:grid;grid-template-columns:minmax(150px,37%) 1fr clamp(80px,10vw,190px);gap:clamp(10px,1.4vw,28px);align-items:center;font-size:clamp(14px,min(2vw,3.4vh),40px);max-height:11vh}
+.row .l{text-align:right;line-height:1.1}
+.row .t{background:rgba(255,255,255,.06);border-radius:8px;height:clamp(18px,3.6vh,52px);overflow:hidden}
+.row .b{height:100%;border-radius:8px;background:var(--cyan);width:0;transition:width .7s ease-out}
+.row .b.top{background:var(--green)}
+.row .v{font-weight:700}.row .v small{color:var(--muted);font-weight:400;font-size:.7em;margin-left:.3em}
+/* columnas */
+.cols{flex:1;display:flex;align-items:flex-end;justify-content:space-around;gap:clamp(8px,1.4vw,28px);min-height:0;padding-bottom:2px}
+.col{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:.3em;min-width:0}
+.col .pair{display:flex;gap:6%;align-items:flex-end;width:100%;flex:1;justify-content:center}
+.col .bar{width:100%;max-width:140px;border-radius:8px 8px 0 0;background:var(--cyan);transition:height .7s ease-out;min-height:2px}
+.col .pair .bar{max-width:80px}
+.col .num{font-weight:700;font-size:clamp(14px,1.8vw,34px)}
+.col .lab{color:var(--muted);font-size:clamp(14px,1.8vw,34px);text-align:center}
+.leg{display:flex;gap:2.5vw;color:var(--muted);font-size:clamp(14px,1.5vw,28px);margin-top:1.2vh;flex-wrap:wrap}.leg b{display:inline-block;width:.8em;height:.8em;border-radius:3px;margin-right:.5em}
+/* dos paneles (miedo / preparacion) */
+.dos{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:clamp(12px,2vw,40px);min-height:0}
+.pn{background:var(--card);border-radius:clamp(14px,1.6vw,30px);padding:clamp(14px,1.8vw,36px);display:flex;flex-direction:column;min-height:0}
+.pn h3{font-size:clamp(18px,2.1vw,40px);line-height:1.15;margin:0}
+.pn .big{display:flex;align-items:baseline;gap:.4em;margin:.2em 0 .3em}
+.pn .big b{font-size:clamp(44px,6vw,120px);line-height:1}
+.pn .big span{color:var(--muted);font-size:clamp(14px,1.5vw,28px)}
+.pn .col .bar{max-width:none}
+.pn .lab small{display:block;font-size:.6em;opacity:.85}
+/* barra inferior */
+.nav{position:fixed;left:0;right:0;bottom:0;height:clamp(54px,8vh,90px);display:flex;align-items:center;justify-content:space-between;padding:0 clamp(16px,3vw,60px);
+  background:linear-gradient(transparent,rgba(7,26,62,.95) 40%);z-index:5}
+.nav .arrow{background:transparent;border:2px solid #22407f;color:var(--text);border-radius:50%;width:clamp(40px,3.4vw,64px);height:clamp(40px,3.4vw,64px);font-size:clamp(18px,1.8vw,32px);cursor:pointer;opacity:.7}
+.nav .arrow:hover{opacity:1;background:var(--card)}
+.dots{display:flex;gap:clamp(6px,.8vw,14px);align-items:center}
+.dots i{width:clamp(9px,.9vw,16px);height:clamp(9px,.9vw,16px);border-radius:50%;background:#22407f;cursor:pointer;display:block}
+.dots i.on{background:var(--green);transform:scale(1.35)}
+.pie{position:fixed;left:50%;transform:translateX(-50%);bottom:clamp(58px,8.6vh,100px);color:var(--muted);font-size:clamp(11px,.9vw,16px);z-index:5;white-space:nowrap}
+.tools{position:fixed;top:10px;right:14px;display:flex;gap:8px;z-index:6;opacity:.25;transition:opacity .2s}
+.tools:hover{opacity:1}
+.tools .btn{padding:5px 10px;font-size:13px}
+.badge{position:fixed;top:12px;left:16px;font-size:clamp(12px,.95vw,17px);color:#ffd9a0;background:#3a2a06;border-radius:999px;padding:4px 12px;z-index:6;display:none}
+.vacio{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.vacio h2{font-size:clamp(32px,5vw,96px)}
+@media(max-width:900px){.kpis{grid-template-columns:1fr 1fr}.ins-grid{grid-template-columns:1fr;overflow-y:auto}.sl{overflow-y:auto}.row{grid-template-columns:110px 1fr 70px;max-height:none}}
+</style>
+</head>
+<body>
+<div id="clave"><h1>Panel del ponente</h1><p class="sub">Ingresa la clave de administrador</p>
+  <input id="k" type="password" autocomplete="off" placeholder="Clave"><button class="btn" id="kb">Entrar</button><p id="kerr" class="sub"></p></div>
+
+<div id="panel">
+  <div class="badge" id="badge"></div>
+  <div class="tools"><button class="btn" id="fs" title="Pantalla completa (F)">Pantalla completa</button><button class="btn" id="auto">Actualizar solo: sí</button><a class="btn" id="csv" href="#">CSV</a></div>
+  <div id="deck"></div>
+  <div class="pie" id="pie"></div>
+  <div class="nav"><button class="arrow" id="ant" aria-label="Anterior">&#8592;</button><div class="dots" id="dots"></div><button class="arrow" id="sig" aria-label="Siguiente">&#8594;</button></div>
+</div>
+
+<script>
+const FREQ = ["Nunca", "Alguna vez al mes", "Cada semana", "Casi todos los días"];
+// Estos dos textos deben coincidir con src/config.js. Los docentes y egresados se cuentan aparte: el analisis es solo de alumnos.
+const DOCENTE = "Soy docente de la universidad", EGRESADO = "Ya egresé";
+const rol = (r) => (r.carrera === DOCENTE ? "docente" : r.ciclo === EGRESADO ? "egresado" : "alumno");
+const $ = (s) => document.querySelector(s);
+const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const pct = (x) => Math.round(100 * x) + "%";
+const media = (a) => a.reduce((s, x) => s + x, 0) / (a.length || 1);
+const f1 = (x) => x.toFixed(1);
+let key = (location.hash.match(/k=([^&]+)/) || [])[1] || sessionStorage.getItem("k") || "";
+let idx = Math.max(0, (parseInt((location.hash.match(/p=(\d+)/) || [])[1], 10) || 1) - 1);
+let auto = true, total = 1, ultimoN = -1, ultimoV = "", insightsIA = null, ultimoSV = 0;
+const sinVer = () => (ultimoSV ? ` · ${ultimoSV} sin verificar (no cuentan)` : "");
+
+function sincHash() { history.replaceState(null, "", "#k=" + encodeURIComponent(key) + "&p=" + (idx + 1)); }
+
+async function cargar() {
+  const t0 = performance.now();
+  let r;
+  try { r = await fetch("/api/datos?key=" + encodeURIComponent(key), { cache: "no-store" }); }
+  catch (e) { $("#pie").textContent = "Sin conexión. Reintentando…"; return; }
+  if (r.status === 401) { sessionStorage.removeItem("k"); return pedirClave("Clave incorrecta"); }
+  const d = await r.json();
+  ultimoN = (d.respuestas || []).length;
+  insightsIA = d.insights || null; ultimoV = insightsIA ? insightsIA.ts : ""; // insights que el ponente publico con Claude (si hay)
+  ultimoSV = d.sinVerificar || 0; // respuestas sin la prueba de Turnstile: se guardan pero no cuentan
+  sessionStorage.setItem("k", key); sincHash();
+  $("#clave").style.display = "none"; $("#panel").style.display = "block";
+  $("#csv").href = "/api/datos?format=csv&key=" + encodeURIComponent(key);
+  dibujar(d.respuestas || [], t0);
+}
+
+function pedirClave(msg) {
+  $("#panel").style.display = "none"; $("#clave").style.display = "block"; $("#kerr").textContent = msg || "";
+  $("#kb").onclick = () => { key = $("#k").value.trim(); if (key) cargar(); };
+}
+
+function conteo(a, campo, orden) {
+  const m = new Map();
+  a.forEach((r) => (Array.isArray(r[campo]) ? r[campo] : [r[campo]]).forEach((v) => m.set(v, (m.get(v) || 0) + 1)));
+  let e = [...m.entries()];
+  e = orden ? orden.map((o) => [o, m.get(o) || 0]) : e.sort((x, y) => y[1] - x[1]);
+  return e;
+}
+
+/* ---------- bloques visuales ---------- */
+function barras(e, n, color) {
+  const mx = Math.max(1, ...e.map((x) => x[1]));
+  return `<div class="bars">${e.map(([l, v], i) => `<div class="row"><span class="l">${esc(l)}</span>
+    <div class="t"><div class="b ${color || (i === 0 ? "top" : "")}" data-w="${(100 * v / mx).toFixed(1)}"></div></div>
+    <span class="v">${v}<small>${pct(v / n)}</small></span></div>`).join("")}</div>`;
+}
+function columnas(e) {
+  const mx = Math.max(1, ...e.map((x) => x[1]));
+  return `<div class="cols">${e.map(([l, v]) => `<div class="col"><span class="num">${v}</span><div class="bar" data-h="${(100 * v / mx).toFixed(1)}" style="height:0"></div><span class="lab">${esc(l)}</span></div>`).join("")}</div>`;
+}
+function escala(a, campo, titulo, color) {
+  const n = a.length, cnt = (v) => a.filter((r) => r[campo] === v).length;
+  const mx = Math.max(1, ...[1, 2, 3, 4, 5].map(cnt));
+  const alto = a.filter((r) => r[campo] >= 4).length / n;
+  const ext = { 1: "Nada", 5: "Mucho" };
+  const cols = [1, 2, 3, 4, 5].map((v) => `<div class="col"><span class="num">${cnt(v)}</span>
+    <div class="bar" data-h="${(100 * cnt(v) / mx).toFixed(1)}" style="height:0;background:${color}"></div>
+    <span class="lab">${v}${ext[v] ? `<small>${ext[v]}</small>` : "<small>&nbsp;</small>"}</span></div>`).join("");
+  return `<div class="pn"><h3 style="color:${color}">${esc(titulo)}</h3>
+    <div class="big"><b>${pct(alto)}</b><span>eligió 4 o 5</span></div><div class="cols">${cols}</div></div>`;
+}
+function miedoPrep(a) {
+  return `<div class="dos">${escala(a, "miedo", "¿Cuánto temes que la IA te quite el trabajo?", "var(--orange)")}
+    ${escala(a, "prep", "¿Qué tan preparado/a te sientes para trabajar con IA?", "var(--green)")}</div>`;
+}
+
+/* ---------- insights (calculados con reglas fijas sobre las respuestas) ---------- */
+function insights(a) {
+  const n = a.length, pts = (r) => FREQ.indexOf(r.frecuencia);
+  const usoSem = a.filter((r) => pts(r) >= 2).length / n, prepAlta = a.filter((r) => r.prep >= 4).length / n;
+  const miedoAlto = a.filter((r) => r.miedo >= 4).length / n;
+  // El titulo y la frase cambian segun los numeros: asi el respaldo nunca afirma algo que los datos contradicen.
+  const ref = "Referencia: en Lima (USIL, feb. 2026) solo 13% se sintió preparado. Otra encuesta y otra pregunta: es un contexto, no una comparación exacta.";
+  const i1 = usoSem < 0.4
+    ? { t: "Todavía pocos la usan con frecuencia", o: `Solo ${pct(usoSem)} la usa cada semana o más; ${pct(prepAlta)} se siente preparado (4 o 5 de 5).`,
+        p: "Sin uso frecuente es difícil ganar práctica y criterio.", a: "Crear ocasiones simples y guiadas para empezar a usarla.", c: ref }
+    : prepAlta <= usoSem - 0.15
+      ? { t: "Usan la IA, pero no se sienten preparados", o: `${pct(usoSem)} la usa cada semana o más, pero solo ${pct(prepAlta)} se siente preparado (4 o 5 de 5).`,
+          p: "Usar una herramienta no es dominarla: sin método no sabes cuándo se equivoca.", a: "Pasar del uso informal a un uso con estructura y verificación.", c: ref }
+      : { t: "Uso y preparación van a la par", o: `${pct(usoSem)} la usa cada semana o más y ${pct(prepAlta)} se siente preparado (4 o 5 de 5).`,
+          p: "Usarla seguido y sentirse preparado coinciden en esta sala.", a: "Mantener la práctica y sumar verificación y criterio.", c: ref };
+  const out = [i1];
+  const g = {};
+  a.forEach((r) => (g[r.carrera] = g[r.carrera] || []).push(r.prep));
+  const gs = Object.entries(g).filter(([, v]) => v.length >= 5).map(([k, v]) => [k, media(v)]).sort((x, y) => y[1] - x[1]);
+  if (gs.length >= 2) {
+    const hi = gs[0], lo = gs[gs.length - 1];
+    const cc = `Se comparan solo carreras con al menos 5 respuestas (n total = ${n}).`;
+    out.push(hi[1] - lo[1] >= 0.5
+      ? { t: "La preparación no es pareja entre carreras", o: `${hi[0]} se siente más preparado (${f1(hi[1])}/5) que ${lo[0]} (${f1(lo[1])}/5).`,
+          p: "La IA llega a todas las carreras, pero no todas la practican igual.", a: "Llevar ejemplos de IA a cada carrera, no solo a computación.", c: cc }
+      : { t: "La preparación es parecida entre carreras", o: `Entre ${hi[0]} (${f1(hi[1])}/5) y ${lo[0]} (${f1(lo[1])}/5) la diferencia es pequeña.`,
+          p: "En esta sala la IA llega de forma parecida a todas las carreras.", a: "Ofrecer práctica común en vez de separar por carrera.", c: cc });
+  } else {
+    const av = a.filter((r) => r.ciclo >= 7).map((r) => r.prep), ini = a.filter((r) => r.ciclo <= 4).map((r) => r.prep);
+    if (av.length >= 3 && ini.length >= 3) {
+      const dif = media(av) - media(ini);
+      out.push(Math.abs(dif) >= 0.5
+        ? { t: "Ciclos avanzados vs. iniciales", o: `Ciclos 7+ se sienten preparados ${f1(media(av))}/5; ciclos 1–4, ${f1(media(ini))}/5.`,
+            p: "La experiencia con la IA depende de en qué etapa estás.", a: "Diseñar rutas distintas según el ciclo.", c: "Pocas respuestas por carrera; se comparan ciclos." }
+        : { t: "La preparación es parecida entre ciclos", o: `Ciclos 7+ (${f1(media(av))}/5) y ciclos 1–4 (${f1(media(ini))}/5) se sienten igual de preparados.`,
+            p: "Avanzar en la carrera no garantiza saber usar la IA.", a: "Enseñar el uso de la IA en todos los ciclos.", c: "Pocas respuestas por carrera; se comparan ciclos." });
+    } else {
+      out.push({ t: "Aún hay pocos datos por grupo", o: `Con ${n} alumno${n === 1 ? "" : "s"} no alcanzan las respuestas por carrera ni por ciclo para comparar.`,
+        p: "Comparar grupos muy chicos puede engañar.", a: "Esperar más respuestas antes de sacar conclusiones por grupo.", c: `n = ${n}.` });
+    }
+  }
+  const fre = a.filter((r) => pts(r) >= 3).map((r) => r.miedo), raro = a.filter((r) => pts(r) <= 1).map((r) => r.miedo);
+  if (fre.length >= 5 && raro.length >= 5) {
+    const mf = media(fre), mr = media(raro);
+    const [fr, pq] = mf < mr - 0.2 ? [`Quienes la usan casi todos los días temen menos (${f1(mf)}/5) que quienes la usan poco (${f1(mr)}/5).`, "Conocer la herramienta reduce el miedo."]
+      : mf > mr + 0.2 ? [`Quienes la usan casi todos los días temen más (${f1(mf)}/5) que quienes la usan poco (${f1(mr)}/5).`, "Verla de cerca también hace evidente lo que puede automatizar."]
+      : [`El miedo es parecido entre quienes la usan mucho (${f1(mf)}/5) y poco (${f1(mr)}/5).`, "Usarla más no cambia el miedo: hace falta criterio, no solo práctica."];
+    out.push({ t: "Miedo y uso: qué relación hay", o: fr, p: pq, a: "Acercar la herramienta con práctica guiada, no solo con información.", c: `Miedo alto (4–5): ${pct(miedoAlto)} de la sala.` });
+  } else {
+    const d = conteo(a, "destino")[0];
+    out.push({ t: "A dónde quieren ir", o: `La opción más elegida para trabajar al egresar es: ${d[0]} (${pct(d[1] / n)}).`, p: "Define dónde necesitan que la IA les abra puertas.",
+      a: "Mostrar cómo la IA permite trabajar remoto o emprender desde la región.", c: `n = ${n}.` });
+  }
+  return { out, usoSem, prepAlta, miedoAlto };
+}
+
+/* ---------- pantallas ---------- */
+const pantalla = (kick, titulo, cuerpo, nota) => `<section class="sl"><p class="kick">${esc(kick)}</p><h2>${esc(titulo)}</h2>${nota ? `<p class="nota">${esc(nota)}</p>` : ""}${cuerpo}</section>`;
+
+function dibujar(todos, t0) {
+  // Solo los alumnos entran al analisis; docentes y egresados se cuentan aparte.
+  const a = todos.filter((r) => rol(r) === "alumno");
+  const nDoc = todos.filter((r) => rol(r) === "docente").length, nEgr = todos.filter((r) => rol(r) === "egresado").length;
+  const n = a.length, deck = $("#deck"), badge = $("#badge");
+  let slides;
+  if (todos.length === 0) {
+    slides = [`<section class="sl"><div class="vacio"><h2>Todavía no hay respuestas</h2><p class="nota">Cuando alguien responda desde el celular, aparecerá aquí.</p></div></section>`];
+    badge.style.display = "none";
+  } else if (n === 0) {
+    slides = [`<section class="sl"><div class="vacio"><h2>Todavía no hay respuestas de alumnos</h2><p class="nota">Hay ${todos.length} respuesta${todos.length === 1 ? "" : "s"}: ${nDoc} de docentes y ${nEgr} de egresados. Solo las de alumnos entran al análisis.</p></div></section>`];
+    badge.style.display = "none";
+  } else {
+    badge.style.display = "none"; // aviso de "pocas respuestas" quitado a pedido del ponente
+    const { out: porReglas, usoSem, prepAlta, miedoAlto } = insights(a);
+    // Si el ponente publico insights redactados con Claude, se muestran esos; si no, los de reglas fijas.
+    const ia = insightsIA && Array.isArray(insightsIA.items) && insightsIA.items.length ? insightsIA : null;
+    const out = ia ? ia.items : porReglas;
+    const notaIns = ia
+      ? `Redactados por Claude con las respuestas de ${ia.nAlumnos ?? "?"} alumnos (${new Date(ia.ts).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" })})${ia.nAlumnos !== null && ia.nAlumnos !== n ? ` · ahora hay ${n}` : ""}`
+      : "Calculados automáticamente a partir de las respuestas de esta sala.";
+    const kpi = (v, l, s) => `<div class="kpi"><div class="v">${v}</div><div class="l">${l}</div>${s ? `<div class="s">${esc(s)}</div>` : ""}</div>`;
+    const aparte = nDoc + nEgr > 0 ? `+ ${nDoc} docente${nDoc === 1 ? "" : "s"} · ${nEgr} egresado${nEgr === 1 ? "" : "s"} (aparte)` : "";
+    slides = [
+      pantalla("Lo que dijo esta sala", "Los datos clave", `<div class="kpis">${kpi(n, "Alumnos que respondieron", aparte)}${kpi(pct(usoSem), "Usan IA cada semana o más")}${kpi(pct(prepAlta), "Se sienten preparados (4–5 de 5)")}${kpi(pct(miedoAlto), "Temen perder el trabajo (4–5 de 5)")}</div>`,
+        `Los porcentajes son sobre los ${n} alumnos. Docentes y egresados se cuentan aparte.`),
+      pantalla("Lo que significan", ["", "Un insight", "Dos insights", "Tres insights"][out.length] || "Insights", `<div class="ins-grid" style="grid-template-columns:repeat(${out.length},1fr)">${out.map((x, i) => `<div class="ins"><div class="n">${i + 1}</div><h3>${esc(x.t)}</h3>
+        <p><b>Observación:</b> ${esc(x.o)}</p><p><b>Por qué importa:</b> ${esc(x.p)}</p><p><b>Acción:</b> ${esc(x.a)}</p>${x.c ? `<p class="ctx">${esc(x.c)}</p>` : ""}</div>`).join("")}</div>`,
+        notaIns),
+      pantalla("Pregunta 1", "¿Quiénes están en la sala?", barras(conteo(todos, "carrera").map(([l, v]) => [l === DOCENTE ? "Docentes" : l.replace(/ \(.*\)$/, ""), v]), todos.length),
+        "Incluye docentes y egresados; el resto de las pantallas cuenta solo alumnos"),
+      pantalla("Pregunta 2", "¿En qué ciclo están?", columnas(conteo(a, "ciclo", [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]).map(([l, v]) => ["Ciclo " + l, v])), "Cantidad de personas por ciclo"),
+      pantalla("Pregunta 3", "¿Con qué frecuencia usan IA?", barras(conteo(a, "frecuencia", FREQ), n, "top")),
+      pantalla("Pregunta 4", "¿Qué herramientas usan?", barras(conteo(a, "herramientas"), n), "Podían marcar varias"),
+      pantalla("Preguntas 6 y 7", "Miedo y preparación", miedoPrep(a), "Cada barra es la cantidad de personas que eligió ese número (1 = nada, 5 = mucho)"),
+      pantalla("Pregunta 5", "¿Para qué usan la IA?", barras(conteo(a, "uso"), n), "Podían marcar varias: los porcentajes son sobre los alumnos y no suman 100%"),
+      pantalla("Pregunta 8", "¿Dónde quieren trabajar al egresar?", barras(conteo(a, "destino"), n)),
+    ];
+    slides.push(slides.splice(1, 1)[0]); // los insights van al final
+  }
+  total = slides.length; if (idx >= total) idx = total - 1;
+  deck.innerHTML = slides.join("");
+  $("#dots").innerHTML = slides.map((_, i) => `<i data-i="${i}" title="Pantalla ${i + 1}"></i>`).join("");
+  document.querySelectorAll("#dots i").forEach((d) => (d.onclick = () => ir(+d.dataset.i)));
+  $("#pie").textContent = `Última actualización: ${new Date().toLocaleTimeString("es-PE")} · procesado en ${((performance.now() - t0) / 1000).toFixed(1)} s${sinVer()}`;
+  mostrar(false);
+}
+
+function mostrar(animar) {
+  document.querySelectorAll(".sl").forEach((s, i) => {
+    s.classList.toggle("on", i === idx); s.classList.toggle("prev", i < idx);
+    if (i === idx) {
+      s.querySelectorAll("[data-w]").forEach((b) => (b.style.width = b.dataset.w + "%"));
+      s.querySelectorAll("[data-h]").forEach((b) => (b.style.height = b.dataset.h + "%"));
+    }
+  });
+  document.querySelectorAll("#dots i").forEach((d, i) => d.classList.toggle("on", i === idx));
+  $("#ant").style.visibility = idx === 0 ? "hidden" : "visible"; $("#sig").style.visibility = idx >= total - 1 ? "hidden" : "visible";
+  if (key) sincHash();
+}
+function ir(i) { const j = Math.max(0, Math.min(total - 1, i)); if (j !== idx) { idx = j; mostrar(true); } }
+
+/* ---------- controles ---------- */
+$("#sig").onclick = () => ir(idx + 1);
+$("#ant").onclick = () => ir(idx - 1);
+document.addEventListener("keydown", (e) => {
+  if (e.target.tagName === "INPUT") return;
+  if (["ArrowRight", "ArrowDown", "PageDown", " ", "Enter"].includes(e.key)) { e.preventDefault(); ir(idx + 1); }
+  else if (["ArrowLeft", "ArrowUp", "PageUp", "Backspace"].includes(e.key)) { e.preventDefault(); ir(idx - 1); }
+  else if (e.key === "Home") ir(0);
+  else if (e.key === "End") ir(total - 1);
+  else if (e.key === "f" || e.key === "F") pantallaCompleta();
+});
+let x0 = null;
+document.addEventListener("touchstart", (e) => (x0 = e.touches[0].clientX), { passive: true });
+document.addEventListener("touchend", (e) => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 60) ir(idx + (dx < 0 ? 1 : -1)); x0 = null; });
+function pantallaCompleta() { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); }
+$("#fs").onclick = pantallaCompleta;
+$("#auto").onclick = () => { auto = !auto; $("#auto").textContent = "Actualizar solo: " + (auto ? "sí" : "no"); };
+// Cada 8 s solo pregunta cuantas respuestas hay; si cambió, recarga y redibuja (sin tocar la pantalla que estás mostrando).
+setInterval(async () => {
+  if (!auto || !key || $("#panel").style.display === "none") return;
+  try {
+    const c = await (await fetch("/api/datos?conteo=1", { cache: "no-store" })).json();
+    if (c.n !== ultimoN || (c.v || "") !== ultimoV || (c.sv || 0) !== ultimoSV) cargar();
+    else $("#pie").textContent = `Sin cambios · revisado a las ${new Date().toLocaleTimeString("es-PE")} · ${c.n} respuestas${sinVer()}`;
+  } catch (e) { $("#pie").textContent = "Sin conexión. Reintentando…"; }
+}, 8000);
+if (key) cargar(); else pedirClave("");
+</script>
+</body>
+</html>

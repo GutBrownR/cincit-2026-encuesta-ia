@@ -1,0 +1,8 @@
+Copia este archivo como ACCESOS.txt (queda fuera de GitHub) y completa tus datos.
+
+Formulario para los alumnos (lo que lleva el QR):
+  https://TU-WORKER.TU-SUBDOMINIO.workers.dev
+
+Panel en vivo (solo para ti):
+  https://TU-WORKER.TU-SUBDOMINIO.workers.dev/panel
+  Clave de administrador: TU_CLAVE

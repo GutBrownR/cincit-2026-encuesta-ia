@@ -1,0 +1,19 @@
+Respuestas: 72
+
+INSIGHT 1 · Usan la IA, pero no se sienten preparados
+  Observación: 76% la usa cada semana o más, pero solo 32% se siente preparado (4 o 5 de 5).
+  Por qué importa: Usar una herramienta no es dominarla: sin método no sabes cuándo se equivoca.
+  Acción: Pasar del uso informal a un uso con estructura y verificación.
+  (Referencia: en Lima (USIL, feb. 2026) solo 13% se sintió preparado. Otra encuesta y otra pregunta: es un contexto, no una comparación exacta.)
+
+INSIGHT 2 · La preparación no es pareja entre carreras
+  Observación: Ingeniería de Sistemas se siente más preparado (3.8/5) que Ingeniería Agroindustrial (2.2/5).
+  Por qué importa: La IA llega a todas las carreras, pero no todas la practican igual.
+  Acción: Llevar ejemplos de IA a cada carrera, no solo a computación.
+  (Se comparan solo carreras con al menos 5 respuestas (n total = 72).)
+
+INSIGHT 3 · Miedo y uso: qué relación hay
+  Observación: Quienes la usan casi todos los días temen menos (3.0/5) que quienes la usan poco (3.5/5).
+  Por qué importa: Conocer la herramienta reduce el miedo.
+  Acción: Acercar la herramienta con práctica guiada, no solo con información.
+  (Miedo alto (4–5): 35% de la sala.)

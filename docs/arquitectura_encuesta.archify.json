@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Encuesta en vivo CINCIT 2026: arquitectura",
+    "locale": "es",
+    "output": "arquitectura_encuesta.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    { "id": "alumnos", "type": "external", "label": "Alumnos", "sublabel": "Celular · QR", "pos": [40, 300], "size": [130, 60] },
+    { "id": "form", "type": "frontend", "label": "Formulario", "sublabel": "8 preguntas anónimas", "pos": [250, 300], "size": [130, 60] },
+    { "id": "worker", "type": "backend", "label": "Worker «encuesta»", "sublabel": "valida y calcula", "pos": [520, 300], "size": [130, 60] },
+    { "id": "turnstile", "type": "security", "label": "Turnstile", "sublabel": "prueba anti-bot", "pos": [520, 150], "size": [130, 60] },
+    { "id": "d1", "type": "database", "label": "D1 (SQLite)", "sublabel": "respuestas · insights", "pos": [520, 450], "size": [130, 60] },
+    { "id": "panel", "type": "frontend", "label": "Panel en vivo", "sublabel": "9 pantallas", "pos": [790, 150], "size": [130, 60] },
+    { "id": "ponente", "type": "external", "label": "Ponente", "sublabel": "Laptop · proyector", "pos": [1050, 150], "size": [130, 60] },
+    { "id": "herramientas", "type": "backend", "label": "Herramientas", "sublabel": "scripts .mjs locales", "pos": [790, 300], "size": [130, 60] },
+    { "id": "claude", "type": "external", "label": "Claude", "sublabel": "redacta insights", "pos": [1050, 300], "size": [130, 60] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Cloudflare", "wraps": ["worker", "turnstile", "d1"] }
+  ],
+  "connections": [
+    { "id": "escanea", "from": "alumnos", "to": "form", "label": "QR", "variant": "emphasis" },
+    { "id": "envia", "from": "form", "to": "worker", "label": "POST respuesta" },
+    { "id": "token-cf", "from": "form", "to": "turnstile", "label": "token anti-bot", "variant": "security" },
+    { "id": "siteverify", "from": "worker", "to": "turnstile", "label": "siteverify", "variant": "security" },
+    { "id": "sql", "from": "worker", "to": "d1", "label": "SQL" },
+    { "id": "lee-panel", "from": "panel", "to": "worker", "label": "datos cada 8 s" },
+    { "id": "api-clave", "from": "herramientas", "to": "worker", "label": "API con clave", "variant": "security" },
+    { "id": "ejecuta", "from": "claude", "to": "herramientas", "label": "ejecuta" },
+    { "id": "procesa", "from": "ponente", "to": "claude", "label": "«procesa»", "variant": "dashed" },
+    { "id": "proyecta", "from": "ponente", "to": "panel", "label": "proyecta" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Qué hace", "items": ["Los alumnos responden por QR, sin correo ni DNI", "El panel grafica solo, sin F5 (revisa cada 8 s)", "Todo corre en Cloudflare: Worker + base D1"] },
+    { "dot": "rose", "title": "Protección", "items": ["Entrada de un solo uso: vale entre 15 s y 6 h", "Turnstile: sin la prueba, la respuesta no cuenta", "Huella cifrada de IP y navegador, solo para detectar grupos raros"] },
+    { "dot": "amber", "title": "Reglas de datos", "items": ["El análisis cuenta solo a alumnos", "Docentes y egresados se muestran aparte", "Insights de Claude solo si el ponente lo pide; si no, reglas fijas"] },
+    { "dot": "emerald", "title": "Clave del ponente", "items": ["Abre el panel, lee todas las respuestas y publica insights", "Nunca se muestra a los alumnos ni va en el formulario"] }
+  ]
+}
