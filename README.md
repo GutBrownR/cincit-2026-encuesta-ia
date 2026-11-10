@@ -77,6 +77,8 @@ node herramientas/revisar.mjs                    # informe de sin verificar y du
 node herramientas/sembrar_demo.mjs 30            # datos INVENTADOS, solo para ensayar
 ```
 
+En [`encuesta/ejemplos/respuestas_DEMO_inventadas.csv`](encuesta/ejemplos/respuestas_DEMO_inventadas.csv) hay un archivo de ejemplo con 128 respuestas **inventadas** (mismo formato que la exportación real) para probar análisis sin datos de personas. No representa a nadie.
+
 ## Privacidad
 
 No se pide nombre, correo, teléfono ni DNI. Cada respuesta lleva un identificador aleatorio y la hora. Este repositorio **no incluye respuestas reales**, claves ni archivos de acceso.
